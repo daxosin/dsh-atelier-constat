@@ -1,12 +1,14 @@
 // constat.js — domaine du constat qualité. Aucune dépendance MCP ici.
+//
+// Itération 2 (16 septembre 2026, soir) :
+// - la preuve est une référence de registre `registre:<id>`, vérifiée avant écriture ;
+//   le modèle ne peut plus inventer une source, il doit la trouver.
+// - plus de filtre RGPD à l'entrée : modèle et données au même endroit (ADR
+//   « RGPD à la frontière »). La détection reste ici pour un futur outil `exporter`.
 import fs from 'node:fs';
 import { z } from 'zod';
 
-export const ROLES = ['pharmacien-titulaire', 'pharmacien-adjoint', 'preparateur', 'qualite'];
-
-// Filtre RGPD volontairement étroit : il attrape les formes les plus courantes
-// d'une donnée nominative dans un champ libre. Il ne prétend pas être exhaustif ;
-// il rend la règle vérifiable par un test, ce qu'une consigne ne fait pas.
+// ── détection de donnée personnelle : réservée à la frontière (export) ───────
 const MOTIFS_RGPD = [
   { nom: 'civilite-nom', re: /\b(?:M\.|Mme|Mlle|Mr|Dr)\s+\p{Lu}[\p{L}'-]+/u },
   { nom: 'telephone', re: /(?:\+33\s?|0)[1-9](?:[\s.-]?\d{2}){4}/ },
@@ -18,23 +20,17 @@ export function detecterDonneePersonnelle(texte) {
   return null;
 }
 
-const texteLibre = (champ) =>
-  z.string().trim().min(1, `${champ} : vide`).superRefine((valeur, ctx) => {
-    const motif = detecterDonneePersonnelle(valeur);
-    if (motif) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `${champ} : donnée personnelle détectée (${motif}). Compteurs et rôles seulement.`,
-      });
-    }
-  });
+// ── schéma ──────────────────────────────────────────────────────────────────
+export const REFERENCE_REGISTRE = /^registre:[A-Z]+-\d{4}-\d{2}-\d{2}-\d{3}$/;
 
 // Forme brute (raw shape) : c'est ce que registerTool du SDK attend.
 export const SCHEMA_CONSTAT = {
-  objet: texteLibre('objet').describe('Ce qui est constaté, sans aucune donnée nominative.'),
-  preuve: z.array(texteLibre('preuve')).min(1, 'preuve : au moins une source vérifiable est obligatoire')
-    .describe('Sources vérifiables (document, registre, date de relevé). Au moins une.'),
-  responsable: z.enum(ROLES).describe('Rôle responsable de l\'action. Jamais un nom.'),
+  objet: z.string().trim().min(1, 'objet : vide').describe('Ce qui est constaté.'),
+  preuve: z.array(
+      z.string().trim().regex(REFERENCE_REGISTRE, 'preuve : forme attendue registre:<id> (ex. registre:STUP-2026-09-15-012), obtenue par registre_chercher'),
+    ).min(1, 'preuve : au moins une référence de registre est obligatoire')
+    .describe('Références de registre, forme registre:<id>. Au moins une. Chaque id doit exister (utiliser registre_chercher).'),
+  responsable: z.string().trim().min(1, 'responsable : vide').describe('Personne ou rôle responsable de l\'action.'),
   echeance: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'echeance : date ISO AAAA-MM-JJ attendue')
     .describe('Échéance de traitement, AAAA-MM-JJ.'),
 };
@@ -73,9 +69,17 @@ export function rejouer(evenements) {
 }
 
 const horlogeReelle = () => new Date().toISOString();
+const existeToujours = () => true;
 
-export function creer(journal, entree, horloge = horlogeReelle) {
+// `existeReference(id)` est injecté par le serveur (connecteur registre) : le
+// domaine ne sait pas où vivent les registres, il sait seulement qu'une preuve
+// doit pointer quelque chose qui existe.
+export function creer(journal, entree, horloge = horlogeReelle, existeReference = existeToujours) {
   const constat = schemaConstat.parse(entree); // lève ZodError, rien n'est écrit
+  for (const ref of constat.preuve) {
+    const id = ref.slice('registre:'.length);
+    if (!existeReference(id)) throw new Error(`preuve : ${ref} introuvable dans les registres. Utiliser registre_chercher pour obtenir un id réel.`);
+  }
   const id = `constat-${rejouer(journal.lire()).size + 1}`;
   const horodatage = horloge();
   journal.ajouter({ type: 'cree', id, constat, horodatage });
@@ -103,5 +107,5 @@ export function formaterErreur(err) {
     return 'Constat refusé par le schéma :\n' +
       err.issues.map((i) => `- ${i.path.join('.') || '(racine)'} : ${i.message}`).join('\n');
   }
-  return `Erreur : ${err.message}`;
+  return `Constat refusé : ${err.message}`;
 }

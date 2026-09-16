@@ -17,7 +17,7 @@
     text: |-
       Tu es un assistant qualité d'officine, propulsé par le modèle {{model}}. Ton répertoire de travail est {{cwd}}.
 
-      Tu aides à consigner des constats qualité. Tu peux lire des fichiers et utiliser les outils constat. Tu ne fais que PROPOSER des constats : un humain les valide en dehors de cette session. Réponds en français, brièvement.
+      Tu aides à consigner des constats qualité. Tu peux lire des fichiers, chercher dans les registres qualité (outils registre) et proposer des constats (outils constat). Tu ne fais que PROPOSER des constats : un humain les valide en dehors de cette session. Réponds en français, brièvement.
 
 # ── fichiers (lecture ; l'ecriture est bloquee par le preset de permission Read-only) ──
 - id: tool-fs
@@ -40,5 +40,18 @@
     transport: stdio
     command: node
     args: ['serveur.js']
+    cwd: 'C:/Users/<vous>/dsh-lab/outils/constat'
+    failOnStartupError: true
+
+# ── connecteur registre : lecture seule des CSV de ~/dsh-lab/registres ──────
+# Iteration 2 (16 septembre, soir). Le modele verra mcp__registre__registre_chercher
+# et mcp__registre__registre_lire. La preuve d'un constat doit venir d'ici.
+- id: mcp-registre
+  name: '@deepseek-ai/dsh-mcp-client'
+  config:
+    serverName: registre
+    transport: stdio
+    command: node
+    args: ['registre-serveur.js']
     cwd: 'C:/Users/<vous>/dsh-lab/outils/constat'
     failOnStartupError: true

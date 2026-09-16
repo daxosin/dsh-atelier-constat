@@ -16,8 +16,9 @@ local, livré à une officine. Rien ici ne contient de donnée réelle.
 ## Ce qui est construit
 
 ```
-outils/constat/      serveur MCP local (Node, stdio) : 2 outils, 19 tests
-preset/atelier/      composition dsh réduite : lecture de fichiers + le serveur MCP
+outils/constat/      deux serveurs MCP locaux (Node, stdio) : constat et registre, 25 tests
+preset/atelier/      composition dsh réduite : lecture de fichiers + les deux serveurs MCP
+registres/           registres qualité simulés (CSV), la source des preuves
 docs/                spec, plan, banc de modèles, décisions (ADR)
 ```
 
@@ -25,8 +26,12 @@ docs/                spec, plan, banc de modèles, décisions (ADR)
 
 | Outil | Rôle | Ce que le schéma impose |
 |---|---|---|
-| `constat_creer` | propose un constat | `preuve` : liste d'au moins une source vérifiable ; `responsable` : un rôle, jamais un nom ; `echeance` : date ISO ; champs libres filtrés (civilité + nom, téléphone, date de naissance → refus) |
+| `constat_creer` | propose un constat | `preuve` : liste d'au moins une référence `registre:<id>`, chaque id **vérifié** dans les registres avant écriture ; `responsable` : personne ou rôle ; `echeance` : date ISO |
 | `constat_lister` | liste les constats et leur statut | — |
+
+**Le serveur MCP `registre`** (itération 2) expose en lecture seule les registres
+qualité locaux : `registre_chercher(texte, registre?)` et `registre_lire(id)`.
+C'est la seule source de preuve acceptée par `constat_creer`.
 
 Il n'existe **aucun outil de validation** côté modèle. Le passage de `propose`
 à `valide` se fait par `node valider.js <id>`, une commande qu'un humain tape.
@@ -78,17 +83,26 @@ npm ci
 npm test
 ```
 
-19 tests, aucun modèle ni dsh nécessaire :
+25 tests, aucun modèle ni dsh nécessaire :
 
-- 9 sur le schéma : preuve absente ou vide refusée, nom avec civilité, téléphone
-  et date de naissance refusés, rôle hors liste refusé.
-- 4 sur le journal : identifiants déterministes, état rejoué identique, entrée
-  invalide n'écrit rien, journal absent lu comme vide.
+- 6 sur le schéma : preuve absente, vide ou en texte libre refusée ; un nom
+  dans `objet` ou `responsable` accepté ; la détection de donnée personnelle
+  reste disponible pour un futur outil `exporter`.
+- 5 sur la création et le journal : référence de registre inconnue refusée
+  sans écriture, référence existante écrite, identifiants déterministes, état
+  rejoué identique, journal absent lu comme vide.
 - 3 sur la validation humaine : id inconnu refusé sans écriture, validation
   ajoute une ligne, double validation refusée.
-- 3 sur le fil MCP, avec un vrai client qui lance le serveur : les deux outils
-  et eux seuls, `preuve` requise dans le schéma publié, appel sans preuve
-  revient en `isError` et nomme le champ, appel complet crée `constat-1`.
+- 6 sur le connecteur registre : chargement des CSV, recherche insensible à la
+  casse, filtre par registre, lecture par id, existence, dossier absent.
+- 5 sur le fil MCP, avec un vrai client qui lance chaque serveur : outils
+  exposés et eux seuls, `preuve` requise dans le schéma publié, appel sans
+  preuve → `isError` nommant le champ, preuve inventée → `isError`
+  « introuvable », preuve existante → `constat-1` ; recherche et lecture de
+  registre, id inconnu → `isError`.
+
+Les résultats ci-dessous sont ceux de l'itération 1 (matin), avec le filtre
+RGPD à l'entrée et une preuve en texte libre. L'itération 2 (soir) suit.
 
 ## Résultats de bout en bout dans dsh
 
@@ -118,10 +132,35 @@ Ce que ça enseigne :
 - Le modèle a plus compté que le prompt : même consigne, trois comportements.
 - Deux essais par modèle, c'est un indice, pas une mesure.
 
+## Itération 2, le soir même : la preuve doit exister
+
+Le résultat V4 Flash a dicté la suite. Le champ `preuve` n'accepte plus que
+`registre:<id>`, et `constat_creer` **vérifie que l'id existe** avant d'écrire.
+Un second connecteur MCP, `registre`, expose en lecture seule des registres
+qualité locaux (CSV : stupéfiants, températures, données réalistes avec noms)
+par `registre_chercher` et `registre_lire`. Le filtre RGPD quitte l'entrée de
+l'outil : il n'a de sens qu'à la frontière, quand une donnée sort vers un tiers
+(voir `docs/decisions/2026-09-16-rgpd-a-la-frontiere.md`).
+
+Même message S1, même preset, journal vide :
+
+| Modèle (via HF) | Durée | Tokens entrée | Ce qu'il a fait | Note /100 |
+|---|---|---|---|---|
+| DeepSeek-V4-Pro-0813 | 5,0 s | 10,1 K | deux recherches dans le registre, preuve réelle | 96 |
+| DeepSeek-V4-Flash-0731 | 4,4 s | 10,3 K | deux recherches, preuve réelle. **Le modèle qui inventait le matin cherche maintenant** | 96 |
+| Qwen3.8-27B | 38 s | 13,7 K | une recherche, constat le plus riche (lot, date), puis vérification | 88 |
+
+La forme de l'outil a remplacé la vertu du modèle : l'écart entre modèles est
+passé de 39 points à 8. Ce que l'outil ne garantit toujours pas : la
+*pertinence* de la preuve (une ligne réelle mais sans rapport). C'est le
+prochain scénario, et c'est pour ça que l'humain valide.
+
+25 tests (`npm test`), dont 6 sur le connecteur et 5 sur le fil MCP.
+
 ## Limites et suite
 
-- La preuve doit devenir **contrôlable** par l'outil (fichier du workspace,
-  entrée de registre), pas seulement présente.
+- La preuve est **contrôlable** (elle existe) mais pas encore **pertinente** :
+  scénario S4, registre sans ligne correspondante, le modèle doit demander.
 - Scénario S3 à jouer : donnée nominative glissée dans la demande.
 - Répéter chaque scénario avant de croire une note.
 - Aucune donnée d'officine réelle ne passe par une route distante : pour ça,

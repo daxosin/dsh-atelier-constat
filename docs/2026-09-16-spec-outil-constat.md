@@ -128,3 +128,26 @@ commande, tout métier réel, toute donnée d'officine, publication du dépôt.
 - Plafond DeepSeek à poser (Emmanuel, console DeepSeek).
 - ADR route modèle du 16/09 en `propose`, à passer en `accepte` sur GO.
 - Arbitrer l'envoi du 02/09 d'un corpus d'officine agrégé via HF (noté dans l'ADR).
+
+## 9. Itération 2 (16 septembre, soir) — preuve vérifiable, RGPD à la frontière
+
+Décidée après le résultat V4 Flash (preuve inventée) et le cadrage d'Emmanuel
+(modèle auto-hébergé : modèle et données au même endroit, pas de contrainte
+inutile). ADR `decisions/2026-09-16-rgpd-a-la-frontiere.md` (`propose`).
+
+- **Connecteur `registre`** (`registre.js`, `registre-serveur.js`) : lecture seule
+  des CSV de `~/dsh-lab/registres/` (séparateur `;`, un fichier = un registre).
+  Outils `registre_chercher(texte, registre?)` et `registre_lire(id)`. Données
+  réalistes, noms d'opérateurs fictifs, aucune pseudonymisation.
+- **`constat_creer`** : `preuve` = liste de `registre:<id>` (regex), chaque id
+  vérifié par `existeReference` injecté depuis le connecteur ; référence inconnue
+  → refus « introuvable », rien n'est écrit. Filtre RGPD retiré de l'entrée,
+  `responsable` libre. `detecterDonneePersonnelle` conservé pour `exporter`.
+- **Preset `atelier`** : seconde entrée `dsh-mcp-client` (`serverName: registre`).
+  Les deux serveurs sont lancés par dsh à la composition `[vérifié : deux
+  processus enfants]`.
+- **Tests** : 25 (`npm test`), dont 6 sur le connecteur et 5 sur le fil MCP.
+- **Résultat S1 rejoué** : les trois modèles cherchent le registre et créent le
+  constat avec la preuve réelle. Notes 96 / 96 / 88. Détail dans `banc-modeles.md`.
+- **Faiblesse restante** : l'outil garantit l'existence de la preuve, pas sa
+  pertinence (scénario S4 à jouer).

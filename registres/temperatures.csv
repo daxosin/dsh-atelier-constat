@@ -1,0 +1,5 @@
+id;date;enceinte;temperature;min;max;operateur;remarque
+TEMP-2026-09-14-001;2026-09-14;Frigo vaccins 1;4.2;2;8;Claire Fontaine;RAS
+TEMP-2026-09-15-001;2026-09-15;Frigo vaccins 1;9.1;2;8;Sophie Lambert;Hors plage au relevé du matin, porte mal fermée
+TEMP-2026-09-15-002;2026-09-15;Frigo vaccins 2;5.0;2;8;Sophie Lambert;RAS
+TEMP-2026-09-16-001;2026-09-16;Frigo vaccins 1;4.8;2;8;Sophie Lambert;RAS
