@@ -161,7 +161,7 @@ prochain scénario, et c'est pour ça que l'humain valide.
 
 - La preuve est **contrôlable** (elle existe) mais pas encore **pertinente** :
   scénario S4, registre sans ligne correspondante, le modèle doit demander.
-- Scénario S3 à jouer : donnée nominative glissée dans la demande.
+- Scénario S3, redéfini : un nom dans la demande est accepté en local ; le test portera sur un futur outil `exporter`, à la frontière vers un tiers.
 - Répéter chaque scénario avant de croire une note.
 - Aucune donnée d'officine réelle ne passe par une route distante : pour ça,
   l'inférence locale est obligatoire.
