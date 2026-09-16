@@ -149,12 +149,35 @@ Même message S1, même preset, journal vide :
 | DeepSeek-V4-Pro-0813 | 5,0 s | 10,1 K | deux recherches dans le registre, preuve réelle, objet recopié de la demande | 92 |
 | DeepSeek-V4-Flash-0731 | 4,4 s | 10,3 K | deux recherches, preuve réelle, objet recopié de la demande. **Le modèle qui inventait le matin cherche maintenant** | 92 |
 | Qwen3.8-27B | 38 s | 13,7 K | une recherche, constat le plus complet (produit, lot, date, quantité), puis vérification | 89 |
+| gpt-oss-120b (OpenAI) via **OVHcloud** | 10,7 s | 12,3 K | trois recherches (deux ratées sur un accent), preuve réelle, hébergé en France | 84 |
 
 La forme de l'outil a remplacé la vertu du modèle : l'écart entre modèles est
-passé de 32 points à 3 (barème B : preuve 40, contrat 15, complétude 15,
-tokens 10, latence 15, réponse 5 ; détail dans `docs/banc-modeles.md`). Ce que l'outil ne garantit toujours pas : la
-*pertinence* de la preuve (une ligne réelle mais sans rapport). C'est le
-prochain scénario, et c'est pour ça que l'humain valide.
+passé de 32 points à 8 (barème B : preuve 40, contrat 15, complétude 15,
+tokens 10, latence 15, réponse 5 ; détail dans `docs/banc-modeles.md`). Ce que
+l'outil ne garantit toujours pas : la *pertinence* de la preuve (une ligne
+réelle mais sans rapport). C'est le prochain scénario, et c'est pour ça que
+l'humain valide. Mistral n'a pas pu être testé : aucun modèle Mistral n'est
+servi en chat par les providers HF au 16/09 (erreur 400 « not a chat model »).
+
+## Vers quoi on vise : des paliers de machines, pas un modèle
+
+La cible n'est pas le poste de développement, ce sont des machines
+professionnelles déployées en 2027–2028, à paliers de budget. Les modèles
+d'aujourd'hui sont des témoins de classe ; ce que le banc mesure, c'est si le
+comportement tient quand on descend de palier. Prix constatés le 16/09/2026,
+sources dans `docs/decisions/2026-09-16-cible-materielle-par-paliers.md` :
+
+| Palier | Machine | Ordre de prix | Classe de modèle | Témoin au banc | Note |
+|---|---|---|---|---|---|
+| A | Mac mini / Mac Studio, 64 à 192 Go unifiés | 2 000 à 7 000 € | 24–32 B, ~100 B MoE quantifié | Qwen3.8-27B | 89 |
+| B | station 1 à 2 × RTX PRO 6000 (96 Go chacune) | ≈ 20 000 à 36 000 € (carte seule 15 569 €, +87 % en août) | 70–120 B | gpt-oss-120b | 84 |
+| C | serveur 4 à 8 × H200 ou DGX B200 | 175 000 à 515 000 $ | 400 B à 1,6 T MoE | DeepSeek V4 Flash / Pro | 92 |
+| — | hébergé en France sans matériel (OVHcloud via HF) | à l'usage | ce que le fournisseur sert | gpt-oss-120b, Qwen3.8-27B | — |
+
+La pente est plate sur l'essentiel (preuve réelle à tous les paliers) ; elle
+se creuse sur la latence et la complétude, qui dépendent du fournisseur autant
+que du modèle. Une officine seule vise A ; un groupement, B ; C est du cloud ou
+de la mutualisation, pas un achat.
 
 25 tests (`npm test`), dont 6 sur le connecteur et 5 sur le fil MCP.
 
