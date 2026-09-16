@@ -1,0 +1,15 @@
+{
+  "name": "constat-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Serveur MCP local : constats qualite, preuve obligatoire par schema, validation humaine hors agent.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "start": "node serveur.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.25.76"
+  }
+}

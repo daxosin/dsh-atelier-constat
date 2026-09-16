@@ -1,0 +1,3 @@
+name: "Atelier (outil constat)"
+description: "Exercice du 16 septembre 2026. Lecture de fichiers plus le serveur MCP constat, rien d'autre. L'agent propose, l'humain valide."
+order: 6

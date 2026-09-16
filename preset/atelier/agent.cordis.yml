@@ -1,0 +1,44 @@
+# Preset `atelier` — 16 septembre 2026. Copie REDUITE du preset livre `cordis`
+# (l'original est conserve a cote : agent.cordis.yml.origine).
+#
+# Exercice : un seul outil du produit, le serveur MCP `constat`, tenu en laisse.
+# Catalogue volontairement etroit : lecture de fichiers + les deux outils constat.
+# Pas de shell, pas de web, pas de sous-agents, pas de plan mode.
+#
+# Regles heritees du preset livre : une ligne de SERVICE doit vivre dans un
+# groupe portant un realm `isolate`. Aucune ligne ci-dessous ne fournit de
+# service (elles ne font qu'enregistrer des outils dans le registre hote), donc
+# aucun realm n'est necessaire.
+
+# ── identite ────────────────────────────────────────────────────────────────
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: |-
+      Tu es un assistant qualité d'officine, propulsé par le modèle {{model}}. Ton répertoire de travail est {{cwd}}.
+
+      Tu aides à consigner des constats qualité. Tu peux lire des fichiers et utiliser les outils constat. Tu ne fais que PROPOSER des constats : un humain les valide en dehors de cette session. Réponds en français, brièvement.
+
+# ── fichiers (lecture ; l'ecriture est bloquee par le preset de permission Read-only) ──
+- id: tool-fs
+  name: '@deepseek-ai/dsh-tool-fs'
+
+- id: tool-fs-search
+  name: '@deepseek-ai/dsh-tool-fs-search'
+  config:
+    sampleOverCapGlobResults: false
+
+# ── l'outil du produit : serveur MCP local `constat` ────────────────────────
+# Une entree par serveur (README de dsh-mcp-client). Le modele verra
+# mcp__constat__constat_creer et mcp__constat__constat_lister.
+# failOnStartupError : si le serveur ne demarre pas, le preset echoue BRUYAMMENT
+# au lieu de tourner sans son outil.
+- id: mcp-constat
+  name: '@deepseek-ai/dsh-mcp-client'
+  config:
+    serverName: constat
+    transport: stdio
+    command: node
+    args: ['serveur.js']
+    cwd: 'C:/Users/<vous>/dsh-lab/outils/constat'
+    failOnStartupError: true
