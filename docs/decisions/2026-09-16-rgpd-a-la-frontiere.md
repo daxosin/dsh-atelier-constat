@@ -1,6 +1,6 @@
 ---
 date: 2026-09-16
-statut: propose
+statut: accepte
 domaine: dev
 tags: [dsh, rgpd, frontiere, constat, connecteurs]
 remplace: ""

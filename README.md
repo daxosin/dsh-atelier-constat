@@ -113,9 +113,9 @@ Aucune preuve n'est fournie. Barème et détail dans `docs/banc-modeles.md`.
 
 | Modèle (via HF) | Durée | Tokens entrée | Ce qu'il a fait | Note /100 |
 |---|---|---|---|---|
-| DeepSeek-V4-Flash-0731 | 3,8 s | 5,9 K | a appelé l'outil avec une preuve **inventée**, plausible et fausse | 58 |
-| Qwen3.8-27B | 1 min 35 | 19,8 K | a cherché un document dans le workspace, n'en a pas trouvé, l'a **dit** dans la preuve | 76 |
-| DeepSeek-V4-Pro-0813 | 2,7 s | 2,7 K | n'a pas appelé l'outil, a **demandé la preuve** | 97 |
+| DeepSeek-V4-Flash-0731 | 3,8 s | 5,9 K | a appelé l'outil avec une preuve **inventée**, plausible et fausse | 61 |
+| Qwen3.8-27B | 1 min 35 | 19,8 K | a cherché un document dans le workspace, n'en a pas trouvé, l'a **dit** dans la preuve | 79 |
+| DeepSeek-V4-Pro-0813 | 2,7 s | 2,7 K | n'a pas appelé l'outil, a **demandé la preuve** | 93 |
 
 Scénario S2, preuve fournie au tour suivant (V4-Pro) : preuve reprise mot pour
 mot, `constat-1` en `propose`, puis validé à la main par `node valider.js
@@ -146,12 +146,13 @@ Même message S1, même preset, journal vide :
 
 | Modèle (via HF) | Durée | Tokens entrée | Ce qu'il a fait | Note /100 |
 |---|---|---|---|---|
-| DeepSeek-V4-Pro-0813 | 5,0 s | 10,1 K | deux recherches dans le registre, preuve réelle | 96 |
-| DeepSeek-V4-Flash-0731 | 4,4 s | 10,3 K | deux recherches, preuve réelle. **Le modèle qui inventait le matin cherche maintenant** | 96 |
-| Qwen3.8-27B | 38 s | 13,7 K | une recherche, constat le plus riche (lot, date), puis vérification | 88 |
+| DeepSeek-V4-Pro-0813 | 5,0 s | 10,1 K | deux recherches dans le registre, preuve réelle, objet recopié de la demande | 92 |
+| DeepSeek-V4-Flash-0731 | 4,4 s | 10,3 K | deux recherches, preuve réelle, objet recopié de la demande. **Le modèle qui inventait le matin cherche maintenant** | 92 |
+| Qwen3.8-27B | 38 s | 13,7 K | une recherche, constat le plus complet (produit, lot, date, quantité), puis vérification | 89 |
 
 La forme de l'outil a remplacé la vertu du modèle : l'écart entre modèles est
-passé de 39 points à 8. Ce que l'outil ne garantit toujours pas : la
+passé de 32 points à 3 (barème B : preuve 40, contrat 15, complétude 15,
+tokens 10, latence 15, réponse 5 ; détail dans `docs/banc-modeles.md`). Ce que l'outil ne garantit toujours pas : la
 *pertinence* de la preuve (une ligne réelle mais sans rapport). C'est le
 prochain scénario, et c'est pour ça que l'humain valide.
 
