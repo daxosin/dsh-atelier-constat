@@ -42,3 +42,14 @@ test('existe est vrai pour un id présent, faux sinon', () => {
 test('un dossier de registres absent se lit comme vide', () => {
   assert.deepEqual(chargerRegistres(path.join(REGISTRES, 'nexiste-pas')), []);
 });
+
+// ── itération 3 : accents ────────────────────────────────────────────────────
+test('chercher est insensible aux accents, dans les valeurs et le nom du registre', () => {
+  assert.equal(chercher(REGISTRES, 'stupéfiants').length, 5, 'le nom du registre est « stupefiants »');
+  assert.equal(chercher(REGISTRES, 'etiquette').length, 1, 'la remarque contient « étiquette »');
+  assert.equal(chercher(REGISTRES, 'ÉTIQUETTE').length, 1);
+});
+
+test('chercher peut se limiter à un registre écrit avec accents', () => {
+  assert.equal(chercher(REGISTRES, 'RAS', 'stupéfiants').length, 4);
+});

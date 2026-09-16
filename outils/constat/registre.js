@@ -26,11 +26,19 @@ export function chargerRegistres(dossier) {
   return resultat;
 }
 
+// Itération 3 : insensible aux accents et à la casse. Un modèle écrit
+// « stupéfiants », le fichier s'appelle stupefiants.csv : les deux doivent
+// se trouver (deux recherches perdues par gpt-oss-120b le 16/09).
+export function normaliser(texte) {
+  return String(texte).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+
 export function chercher(dossier, texte, registre) {
-  const aiguille = texte.trim().toLowerCase();
+  const aiguille = normaliser(texte);
+  const filtreRegistre = registre ? normaliser(registre) : null;
   return chargerRegistres(dossier).filter((l) =>
-    (!registre || l.registre === registre) &&
-    Object.values(l).some((v) => String(v).toLowerCase().includes(aiguille)),
+    (!filtreRegistre || normaliser(l.registre) === filtreRegistre) &&
+    Object.values(l).some((v) => normaliser(v).includes(aiguille)),
   );
 }
 

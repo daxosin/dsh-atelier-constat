@@ -34,7 +34,7 @@ const VALIDE = {
 test('constat : expose exactement constat_creer et constat_lister, preuve requise', async () => {
   const c = await client('serveur.js');
   const { tools } = await c.listTools();
-  assert.deepEqual(tools.map((t) => t.name).sort(), ['constat_creer', 'constat_lister']);
+  assert.deepEqual(tools.map((t) => t.name).sort(), ['constat_creer', 'constat_exporter', 'constat_lister']);
   assert.ok(tools.find((t) => t.name === 'constat_creer').inputSchema.required.includes('preuve'));
   await c.close();
 });
@@ -76,5 +76,16 @@ test('registre : expose registre_chercher et registre_lire, lecture seule', asyn
   assert.match(l.content[0].text, /Sophie Lambert/);
   const inconnu = await c.callTool({ name: 'registre_lire', arguments: { id: 'TEMP-1999-01-01-999' } });
   assert.equal(inconnu.isError, true);
+  await c.close();
+});
+
+test('constat : constat_exporter existe, refuse un constat non validé', async () => {
+  const c = await client('serveur.js');
+  const { tools } = await c.listTools();
+  assert.ok(tools.map((t) => t.name).includes('constat_exporter'));
+  await c.callTool({ name: 'constat_creer', arguments: VALIDE });
+  const r = await c.callTool({ name: 'constat_exporter', arguments: { id: 'constat-1' } });
+  assert.equal(r.isError, true);
+  assert.match(JSON.stringify(r.content), /valid/);
   await c.close();
 });

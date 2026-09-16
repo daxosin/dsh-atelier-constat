@@ -159,6 +159,21 @@ réelle mais sans rapport). C'est le prochain scénario, et c'est pour ça que
 l'humain valide. Mistral n'a pas pu être testé : aucun modèle Mistral n'est
 servi en chat par les providers HF au 16/09 (erreur 400 « not a chat model »).
 
+## Itération 3 et la frontière codée
+
+- La recherche de registre est insensible aux accents (« stupéfiants » trouve
+  `stupefiants.csv` : deux recherches perdues par gpt-oss, une ligne de code).
+- `node valider.js constat-1` affiche la ligne de registre citée **avant** de
+  signer : l'humain valide avec la preuve sous les yeux.
+- **`constat_exporter(id)`** : l'outil de frontière. Il n'exporte qu'un constat
+  **validé par un humain**, contrôle chaque champ qui part (constat et lignes de
+  registre) contre le détecteur de données personnelles, écrit un markdown
+  autoportant dans `exports/`, et trace l'export dans le journal. L'envoi à un
+  tiers reste un geste humain. Limite documentée par un test : un nom sans
+  civilité passe le filtre.
+
+35 tests (`npm test`).
+
 ## Vers quoi on vise : des paliers de machines, pas un modèle
 
 La cible n'est pas le poste de développement, ce sont des machines

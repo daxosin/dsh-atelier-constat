@@ -4,8 +4,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { z } from 'zod';
 import { Journal, SCHEMA_CONSTAT, creer, lister, formaterErreur } from './constat.js';
 import { existe } from './registre.js';
+import { exporter } from './exporter.js';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const journal = new Journal(process.env.CONSTAT_JOURNAL ?? path.join(ICI, 'journal.jsonl'));
@@ -37,6 +39,27 @@ server.registerTool(
   'constat_lister',
   { description: 'Liste les constats et leur statut (propose | valide).', inputSchema: {} },
   async () => ({ content: [{ type: 'text', text: JSON.stringify(lister(journal), null, 2) }] }),
+);
+
+// La frontière : n'exporte qu'un constat validé par un humain, refuse toute
+// donnée personnelle détectée, écrit un markdown local. L'envoi reste humain.
+const EXPORTS = process.env.EXPORTS_DIR ?? path.resolve(ICI, '..', '..', 'exports');
+server.registerTool(
+  'constat_exporter',
+  {
+    description:
+      'Exporte un constat VALIDÉ par un humain vers un dossier markdown local, avec ses lignes de registre. ' +
+      'Refusé si le constat n\'est pas validé ou si une donnée personnelle est détectée. L\'envoi à un tiers reste un geste humain.',
+    inputSchema: { id: z.string().min(1).describe('Identifiant du constat, ex. constat-1.') },
+  },
+  async ({ id }) => {
+    try {
+      const r = exporter(journal, id, { registres: REGISTRES, dossier: EXPORTS });
+      return { content: [{ type: 'text', text: `Exporté : ${r.chemin}` }] };
+    } catch (e) {
+      return { content: [{ type: 'text', text: e.message }], isError: true };
+    }
+  },
 );
 
 await server.connect(new StdioServerTransport());

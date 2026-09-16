@@ -151,3 +151,26 @@ inutile). ADR `decisions/2026-09-16-rgpd-a-la-frontiere.md` (`propose`).
   constat avec la preuve réelle. Notes 96 / 96 / 88. Détail dans `banc-modeles.md`.
 - **Faiblesse restante** : l'outil garantit l'existence de la preuve, pas sa
   pertinence (scénario S4 à jouer).
+
+## 10. Itération 3 et outil `exporter` (16 septembre, 22 h 30)
+
+Ordre choisi par autonomie (Emmanuel : « commence dans l'ordre où tu es le plus
+autonome »).
+
+- **Itération 3** : `chercher` insensible aux accents et à la casse (valeurs et
+  nom de registre : « stupéfiants » trouve `stupefiants.csv`) ; `valider.js`
+  affiche la ligne de registre citée **avant** de signer. L'humain valide avec
+  la preuve sous les yeux.
+- **`exporter`** (`exporter.js`, outil MCP `constat_exporter(id)`) : la
+  frontière codée. N'exporte qu'un constat **validé** ; contrôle RGPD sur
+  l'objet, le responsable et **chaque champ des lignes de registre citées** ;
+  écrit un markdown autoportant dans `~/dsh-lab/exports/` ; ajoute un événement
+  `exporte` au journal (état rejoué : `exporteLe`, `exportChemin`). L'envoi au
+  tiers reste un geste humain.
+- **Limite documentée par un test** : le filtre ne détecte pas un nom sans
+  civilité (« Julien Morel » passe). C'est le filtre de l'itération 1, inchangé ;
+  le durcir est un chantier à part (dictionnaire de prénoms, ou pseudonymisation
+  des opérateurs à l'export).
+- **Tests** : 35 (`npm test`) : 29 après l'itération 3, 35 avec l'export.
+- Les nouveaux outils sont chargés à la prochaine session dsh (le serveur MCP
+  est relancé à chaque composition) ; aucun redémarrage de dsh nécessaire.

@@ -63,6 +63,9 @@ export function rejouer(evenements) {
     } else if (e.type === 'valide') {
       const c = constats.get(e.id);
       if (c) { c.statut = 'valide'; c.valideLe = e.horodatage; }
+    } else if (e.type === 'exporte') {
+      const c = constats.get(e.id);
+      if (c) { c.exporteLe = e.horodatage; c.exportChemin = e.chemin; }
     }
   }
   return constats;
